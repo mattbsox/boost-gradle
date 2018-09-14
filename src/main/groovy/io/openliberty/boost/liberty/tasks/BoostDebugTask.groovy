@@ -15,18 +15,18 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.Task
 import org.gradle.api.logging.LogLevel
 
-public class BoostRunTask extends AbstractBoostTask {
+public class BoostDebugTask extends AbstractBoostTask {
 
-    BoostRunTask() {
+    BoostDebugTask() {
         configure({
-            description 'Runs the Boost application in the foreground.'
+            description 'Runs the Boost application in debug mode.'
             logging.level = LogLevel.INFO
             group 'Boost'
 
-            finalizedBy 'libertyRun'
+            finalizedBy 'libertyDebug'
 
             doFirst {
-                logger.info('Running the application in the foreground.')
+                logger.info('Running the application in debug mode.')
             }
         })
     }   
