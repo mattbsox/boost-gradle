@@ -16,7 +16,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.artifacts.PublishArtifactSet
 
 import io.openliberty.boost.utils.GradleProjectUtil
 

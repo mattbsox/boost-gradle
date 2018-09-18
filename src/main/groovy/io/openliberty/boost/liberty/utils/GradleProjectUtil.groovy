@@ -15,6 +15,8 @@ import java.util.Set
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
 
+import groovy.lang.MissingPropertyException
+
 public class GradleProjectUtil {
 
     /**
@@ -23,11 +25,16 @@ public class GradleProjectUtil {
     public static String findSpringBootVersion(Project project) {
         String version = null;
 
-        for ( Dependency dep : project.configurations.compile.getAllDependencies().toArray()) {
-            if ("org.springframework.boot".equals(dep.getGroup()) && "spring-boot".equals(dep.getName())) {
-                version = dep.getVersion()
-                break
+        try {
+            for (Dependency dep : project.configurations.compile.getAllDependencies().toArray()) {
+                if ("org.springframework.boot".equals(dep.getGroup()) && "spring-boot".equals(dep.getName())) {
+                    version = dep.getVersion()
+                    break
+                }
             }
+        } catch (MissingPropertyException e) {
+            project.getLogger().warn('No compile configuration found.')
+            return version
         }
 
         return version        
