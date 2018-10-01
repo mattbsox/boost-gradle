@@ -56,7 +56,7 @@ public class BoostPackageTask extends AbstractBoostTask {
                 if (isSpringProject()) {
                     if(springBootVersion.startsWith('2.0')) {
                         boostPackage.archive = project.bootJar.archivePath.toString()
-                        dependsOn 'bootJar'
+                        dependsOn 'installApps'
                     } // else { //Assume 1.5?
                     //     //No bootJar task so we have to get the archive name from the jar or war tasks
                     //     if (project.plugins.hasPlugin('java')) {
@@ -71,11 +71,8 @@ public class BoostPackageTask extends AbstractBoostTask {
                     //     dependsOn 'bootRepackage'
                     // }
 
-                    //Doing this until installSpringBootApp is added to installApps
-                    project.tasks.getByName('installApps').enabled = false
-
                     //installFeature should check the server.xml in the server directory and install the missing features
-                    project.tasks.getByName('libertyPackage').dependsOn 'installSpringBootApp', 'installFeature'
+                    project.tasks.getByName('libertyPackage').dependsOn 'installApps', 'installFeature'
                     finalizedBy 'libertyPackage'
                 } else { //JavaEE projects
 

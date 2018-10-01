@@ -34,5 +34,6 @@ public class Boost implements Plugin<Project> {
     void configureBoostServerProperties() {
         boostServer = new ServerExtension()
         boostServer.name = BOOST_SERVER_NAME
+        boostServer.looseApplication = false
     }
 }
