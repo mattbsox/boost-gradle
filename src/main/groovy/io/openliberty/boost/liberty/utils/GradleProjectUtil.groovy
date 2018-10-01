@@ -23,17 +23,17 @@ public class GradleProjectUtil {
      * Detect spring boot version dependency
      */
     public static String findSpringBootVersion(Project project) {
-        String version = null;
+        String version = null
 
         try {
-            for (Dependency dep : project.configurations.compile.getAllDependencies().toArray()) {
-                if ("org.springframework.boot".equals(dep.getGroup()) && "spring-boot".equals(dep.getName())) {
+            for (Dependency dep : project.buildscript.configurations.classpath.getAllDependencies().toArray()) {
+                if ("org.springframework.boot".equals(dep.getGroup()) && "spring-boot-gradle-plugin".equals(dep.getName())) {
                     version = dep.getVersion()
                     break
                 }
             }
         } catch (MissingPropertyException e) {
-            project.getLogger().warn('No compile configuration found.')
+            project.getLogger().warn('No buildscript configuration found.')
             return version
         }
 

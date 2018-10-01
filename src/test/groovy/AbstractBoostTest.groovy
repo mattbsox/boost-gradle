@@ -72,6 +72,17 @@ public class AbstractBoostTest {
         }
     }
 
+    protected static File copyFile(File sourceFile, File destFile) {
+        if (!sourceFile.exists()){
+            throw new AssertionError("The source file '${sourceFile.canonicalPath}' doesn't exist.")
+        }
+        try {
+            FileUtils.copyFile(sourceFile, destFile)
+        } catch (Exception e) {
+            throw new AssertionError("Unable to create file '${destFile.canonicalPath}'.")
+        }
+    }
+
     protected void writeFile(File destination, String content) throws IOException {
         BufferedWriter output = null
         try {

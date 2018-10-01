@@ -22,9 +22,11 @@ configurations {
 
 dependencies {
     compile localGroovy()
-    compile 'net.wasdev.wlp.common:ci.common:1.3'
-    compile 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:2.5'
+    compile 'net.wasdev.wlp.common:ci.common:1.3.3-SNAPSHOT'
+    compile 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:2.6-SNAPSHOT'
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    compile 'io.openliberty.boost:boost-common:0.2-SNAPSHOT'
+
 
     testCompile 'junit:junit:4.12'
 }
