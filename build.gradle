@@ -14,10 +14,14 @@ repositories {
     maven {
         url 'https://oss.sonatype.org/content/repositories/snapshots/'
     }
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
 }
 
 configurations {
-
+    //dependencies to be included in the plugin jar
+    includeLibs
 }
 
 dependencies {
@@ -27,8 +31,17 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
     compile 'io.openliberty.boost:boost-common:0.2-SNAPSHOT'
 
+    includeLibs 'gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.20.1'
+
+    configurations.compile.extendsFrom(configurations.includeLibs)
 
     testCompile 'junit:junit:4.12'
+}
+
+jar {
+    from {
+        configurations.includeLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 compileJava {

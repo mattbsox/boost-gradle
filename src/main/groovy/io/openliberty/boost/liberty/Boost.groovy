@@ -17,23 +17,21 @@ public class Boost implements Plugin<Project> {
 
     final String BOOST_SERVER_NAME = 'BoostServer'
 
-    ServerExtension boostServer
-
     void apply(Project project) {
         project.extensions.create('boost', BoostExtension)
 
-        project.pluginManager.apply('net.wasdev.wlp.gradle.plugins.Liberty')
-
-        configureBoostServerProperties()
-
-        project.liberty.server = boostServer
-
         new BoostTaskFactory(project).createTasks()
+
+        project.pluginManager.apply('net.wasdev.wlp.gradle.plugins.Liberty')
+        project.pluginManager.apply('com.palantir.docker')
+
+        project.liberty.server = configureBoostServerProperties()
     }
 
-    void configureBoostServerProperties() {
-        boostServer = new ServerExtension()
+    ServerExtension configureBoostServerProperties() {
+        ServerExtension boostServer = new ServerExtension()
         boostServer.name = BOOST_SERVER_NAME
         boostServer.looseApplication = false
+        return boostServer
     }
 }
