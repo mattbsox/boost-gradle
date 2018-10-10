@@ -57,40 +57,46 @@ public class BoostPackageTask extends AbstractBoostTask {
                     if(springBootVersion.startsWith('2.0')) {
                         boostPackage.archive = project.bootJar.archivePath.toString()
                         dependsOn 'installApps'
-                    } // else { //Assume 1.5?
-                    //     //No bootJar task so we have to get the archive name from the jar or war tasks
-                    //     if (project.plugins.hasPlugin('java')) {
-                    //         //Going to use the first task archiveName for the boostJar name
-                    //         boostPackage.archive = project.jar.archiveName 
-                    //     } else if (project.plugins.hasPlugin('war')) { //Might also need a case for wars
-                    //         boostPackage.archive = project.war.archiveName
-                    //     } else {
-                    //         boostPackage.archive = 'BoostApp.jar'
-                    //     }
+                    } else { //Assume 1.5?
+                        //No bootJar task so we have to get the archive name from the jar or war tasks
+                        if (project.plugins.hasPlugin('java')) {
+                            //Going to use the jar task archiveName for the boostRepackage name
+                            //bootRepackage can use any jar task, might need to check that too
+                            boostPackage.archive = project.jar.archivePath.toString()
+                        } else if (project.plugins.hasPlugin('war')) { //Might also need a case for wars
+                            boostPackage.archive = project.war.archivePath.toString()
+                        } else {
+                            throw new GradleException('Could not determine project artifact name.')
+                        }
 
-                    //     dependsOn 'bootRepackage'
-                    // }
+                        //Handle classifier
+                        if (project.bootRepackage.classifier != null && !project.bootRepackage.classifier.isEmpty()) {
+                            boostPackage.archive = //Adding classifier to the boost archiveName
+                                boostPackage.archive.substring(0, boostPackage.archive.lastIndexOf(".")) + '-' + project.bootRepackage.classifier.toString() + boostPackage.archive.substring(boostPackage.archive.lastIndexOf("."))
+                        }
+
+                        dependsOn 'bootRepackage'
+                    }
 
                     //installFeature should check the server.xml in the server directory and install the missing features
-                    project.tasks.getByName('libertyPackage').dependsOn 'installApps', 'installFeature'
-                    finalizedBy 'libertyPackage'
+                    project.tasks.getByName('libertyPackage').dependsOn 'installFeature'
                 } else { //JavaEE projects
 
                     //Need to check features and generate server.xml
 
                     dependsOn 'installApps'
 
-                    finalizedBy 'libertyPackage'
-
                     //WAR and EAR projects will be packaged as zips even with include set to 'minify, runnable'
                     if(project.plugins.hasPlugin('war')) {
-                        boostPackage.archive = project.tasks.getByName('war').archiveName
+                        boostPackage.archive = project.war.archivePath.toString()
                     } else if (project.plugins.hasPlugin('ear')) {
-                        boostPackage.archive = project.tasks.getByName('ear').archiveName
+                        boostPackage.archive = project.ear.archivePath.toString()
                     } else {
                         boostPackage.archive = 'BoostApp.jar'
                     }
                 }
+                project.tasks.getByName('libertyPackage').dependsOn 'installApps'
+                finalizedBy 'libertyPackage'
                 boostPackage.include = "runnable, minify"
             }
 
@@ -204,7 +210,7 @@ public class BoostPackageTask extends AbstractBoostTask {
             if (springBootUberJarCopy == null) {
                 logger.info('Plugin should replace the project archive: ' + shouldReplaceProjectArchive())
                 if (shouldReplaceProjectArchive()) {
-                    if (!project.configurations.archives.allArtifacts.isEmpty()) {  
+                    if (!project.configurations.archives.allArtifacts.isEmpty()) {
                         File springJar = new File(
                             SpringBootUtil.getBoostedSpringBootUberJarPath(project.configurations.archives.allArtifacts[0].getFile()))
                         if (net.wasdev.wlp.common.plugins.util.SpringBootUtil.isSpringBootUberJar(springJar)) {

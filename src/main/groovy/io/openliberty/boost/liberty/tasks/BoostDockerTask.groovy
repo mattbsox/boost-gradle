@@ -36,30 +36,59 @@ public class BoostDockerTask extends AbstractBoostTask {
     protected static final String COPY = "COPY "
     protected static final String RUN = "RUN "
 
+    String springBootVersion
+    File appFile
+
     BoostDockerTask() {
         configure({
             description 'Dockerizes a Boost project.'
             logging.level = LogLevel.INFO
             group 'Boost'
 
-            dependsOn 'bootJar'
             finalizedBy 'docker'
 
             project.afterEvaluate {
-                configureDockerPlugin()
+                springBootVersion = GradleProjectUtil.findSpringBootVersion(project)
+                if (springBootVersion != null) {
+                    if (springBootVersion.startsWith("2.")) {
+                        dependsOn 'bootJar'
+                        appFile = project.bootJar.archivePath
+                    } else if (springBootVersion.startsWith("1.")){
+                        dependsOn 'bootRepackage'
+                        if (project.plugins.hasPlugin('java')) {
+                            appFile = project.jar.archivePath
+                            //Checking for classifier in bootRepackage and adding to archiveName
+                            if (project.bootRepackage.classifier != null && !project.bootRepackage.classifier.isEmpty()) {
+                                String appArchiveName = //Adding classifier to the appArchive name
+                                    appFile.getName().substring(0, appFile.getName().lastIndexOf(".")) +
+                                    '-' + 
+                                    project.bootRepackage.classifier.toString() + 
+                                    appFile.getName().substring(appFile.getName().lastIndexOf("."))
+                                appFile = new File(appFile.getParent(), appArchiveName)
+                            }
+                        }
+                    } //JEE case here
+                    configureDockerPlugin()  
+                }
                 project.dockerClean.enabled = false
                 project.dockerPrepare.enabled = false
             }
             
             doFirst {
+                if (appFile == null) { //if we didn't set the appName during configuration we can get it from the project
+                    if (!project.configurations.archives.allArtifacts.isEmpty()) {
+                        appFile = project.configurations.archives.allArtifacts[0].getFile()
+                        project.docker.setName(appFile.getName())
+                    } else {
+                        throw new GradleException ('Unable to determine the project artifact name.')
+                    }
+                }
                 createDockerFile()
             }
         })
     }
 
     public void createDockerFile() throws GradleException {
-        String springBootVersion = GradleProjectUtil.findSpringBootVersion(project)
-
         if (springBootVersion != null) {
             createSpringBootDockerFile(springBootVersion)
             //Need to add the application to the build/docker directory for the docker plugin to work
@@ -69,41 +98,36 @@ public class BoostDockerTask extends AbstractBoostTask {
         }
     }
 
+    //Could get the archiveName from the configurations.archives
     protected void configureDockerPlugin() {
-        project.docker.setName('boost-container')
+        if (project.boost.dockerRepo != null && !project.boost.dockerRepo.isEmpty()) {
+            project.docker.setName(project.boost.dockerRepo + '/' + appFile.getName())
+        } else {
+            project.docker.setName(appFile.getName())
+        }
+
         project.docker.setDockerfile(new File(project.projectDir, 'Dockerfile'))
-        project.docker.buildArgs(['APP_FILE': "${project.bootJar.archiveName}"])
+        project.docker.buildArgs(['APP_FILE': appFile.getName()])
+        project.docker.tags('latest')
     }
 
     //Copies application artifact and Dockerfile to build/docker
     protected void copyAppToDockerDir() {
         File dockerDir = new File(project.buildDir, "docker")
-        Files.copy(project.bootJar.archivePath.toPath(), new File(dockerDir, "${project.bootJar.archiveName}").toPath())
+        Files.copy(appFile.toPath(), new File(dockerDir, appFile.getName()).toPath())
         Files.copy(new File(project.projectDir, "Dockerfile").toPath(), new File(dockerDir, "Dockerfile").toPath())
     }
 
     protected void createSpringBootDockerFile(String springBootVersion) throws GradleException, IOException {
         try {
-            File appArchive
-
-            if (springBootVersion.startsWith("2.")) {
-                appArchive = project.bootJar.archivePath
-            }
-            //else if (springBootVersion.startsWith("1.")){
-            //    handle the 1.5 case
-            //}
-            else { //Need to change this message to support 1.5
-                throw new GradleException ("This project is not using a supported Spring version. Please use Spring 2.0")
-            }
-
-            if (SpringBootUtil.isSpringBootUberJar(appArchive)) {
+            if (SpringBootUtil.isSpringBootUberJar(appFile)) {
                 File dockerDir = new File(project.buildDir, 'docker')
                 Files.createDirectory(dockerDir.toPath())
                 File dockerFile = createNewDockerFile(project.projectDir)
                 String libertySBImage = getLibertySpringBootBaseImage(springBootVersion)
                 writeSpringBootDockerFile(dockerFile, libertySBImage)
             } else {
-                throw new GradleException(appArchive.getAbsolutePath() + " file is not an executable archive. "
+                throw new GradleException(appFile.getAbsolutePath() + " file is not an executable archive. "
                         + "Please rebuild the archive with the bootJar or bootRepackage tasks.")
             }
         } catch (FileAlreadyExistsException e1) {
@@ -121,12 +145,9 @@ public class BoostDockerTask extends AbstractBoostTask {
     protected String getLibertySpringBootBaseImage(String springBootVersion) throws GradleException {
         String libertyImage = null
 
-        // Add in after 1.5 is working with ci.gradle
-        // if (springBootVersion.startsWith("1.")) {
-        //     libertyImage = LIBERTY_IMAGE_1
-        // } else 
-
-        if (springBootVersion.startsWith("2.")) {
+        if (springBootVersion.startsWith("1.")) {
+            libertyImage = LIBERTY_IMAGE_1
+        } else if (springBootVersion.startsWith("2.")) {
             libertyImage = LIBERTY_IMAGE_2
         } else {
             throw new GradleException(
@@ -146,7 +167,6 @@ public class BoostDockerTask extends AbstractBoostTask {
 
         lines.add("\n")
         lines.add("# Stage the fat JAR")
-        // lines.add(COPY + project.buildDir + "/libs/" + "\${APP_FILE}" + " " + "/staging/" + "\${APP_FILE}")
         lines.add(COPY + "\${APP_FILE}" + " " + "/staging/" + "\${APP_FILE}")
 
         lines.add("\n")

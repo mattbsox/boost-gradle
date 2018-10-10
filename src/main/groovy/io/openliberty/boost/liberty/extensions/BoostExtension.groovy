@@ -16,4 +16,6 @@
 
 class BoostExtension {
 
+	String dockerRepo
+
 }

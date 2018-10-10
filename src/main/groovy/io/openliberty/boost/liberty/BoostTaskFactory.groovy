@@ -18,6 +18,7 @@ import io.openliberty.boost.liberty.tasks.BoostStopTask
 import io.openliberty.boost.liberty.tasks.BoostPackageTask
 import io.openliberty.boost.liberty.tasks.BoostDebugTask
 import io.openliberty.boost.liberty.tasks.BoostDockerTask
+import io.openliberty.boost.liberty.tasks.BoostDockerPushTask
 
 class BoostTaskFactory {
     Project project
@@ -33,5 +34,7 @@ class BoostTaskFactory {
         project.tasks.create('boostPackage', BoostPackageTask)
         project.tasks.create('boostDebug', BoostDebugTask)
         project.tasks.create('boostDocker', BoostDockerTask)
+        project.tasks.create('boostDockerPush', BoostDockerPushTask)
+        
     }
 }
