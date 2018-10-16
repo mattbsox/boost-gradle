@@ -26,10 +26,12 @@ apply plugin: 'boost'
 
 # Plugin Tasks
 
-| Task Name    | Description                                   |
-|--------------|-----------------------------------------------|
-| boostStart   | Starts the Boost application.                 |
-| boostStop    | Stops the Boost application.                  |
-| boostRun     | Runs the Boost application in the foreground. |
-| boostDebug   | Runs the Boost application in debug mode.     |
-| boostPackage | Packages the application and server.          |
+| Task Name       | Description                                      |
+|-----------------|--------------------------------------------------|
+| boostStart      | Starts the Boost application.                    |
+| boostStop       | Stops the Boost application.                     |
+| boostRun        | Runs the Boost application in the foreground.    |
+| boostDebug      | Runs the Boost application in debug mode.        |
+| boostPackage    | Packages the application and server.             |
+| boostDocker     | Creates a Docker file and image for the project. |
+| boostDockerPush | Pushes Docker image to a Docker repository.      |

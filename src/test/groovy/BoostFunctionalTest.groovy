@@ -23,7 +23,7 @@ import static org.gradle.testkit.runner.TaskOutcome.*
 
 public class BoostFunctionalTest extends AbstractBoostTest {
 
-    String buildFileContent = "buildscript {\n\trepositories {\n\t\tmavenLocal()\n\t\tmavenCentral()\n\t}\n\tdependencies {\n\t\tclasspath 'io.openliberty.boost:boost-gradle-plugin:0.1-SNAPSHOT'\n\t}\n}\n\napply plugin: 'boost'"
+    String buildFileContent = "buildscript {\n\trepositories {\n\t\tmavenLocal()\n\t\tmavenCentral()\n\t}\n\tdependencies {\n\t\tclasspath \"io.openliberty.boost:boost-gradle-plugin:\$boostVersion\"\n\t}\n}\n\napply plugin: 'boost'"
 
     @Before
     void setup () {
@@ -31,6 +31,7 @@ public class BoostFunctionalTest extends AbstractBoostTest {
         
         createDir(testProjectDir)
         writeFile(new File(testProjectDir, 'build.gradle'), buildFileContent)
+        copyFile(new File("build/gradle.properties"), new File(testProjectDir, 'gradle.properties'))
     }
 
     @Test

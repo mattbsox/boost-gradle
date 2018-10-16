@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
-        classpath('io.openliberty.boost:boost-gradle-plugin:0.1-SNAPSHOT')
+        classpath("io.openliberty.boost:boost-gradle-plugin:$boostVersion")
     }
 }
 

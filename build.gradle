@@ -29,7 +29,7 @@ dependencies {
     compile 'net.wasdev.wlp.common:ci.common:1.3.3-SNAPSHOT'
     compile 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:2.6-SNAPSHOT'
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
-    compile 'io.openliberty.boost:boost-common:0.2-SNAPSHOT'
+    compile 'io.openliberty.boost:boost-common:0.1.2-SNAPSHOT'
 
     includeLibs 'gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.20.1'
 
@@ -43,6 +43,34 @@ dependencies {
 jar {
     from {
         configurations.includeLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+test {
+    doFirst { //Copying gradle.properties with plugin version to test projects
+        Properties prop = new Properties()
+        OutputStream output = null
+
+        try {
+            output = new FileOutputStream("${buildDir}/gradle.properties")
+
+            // set the properties value
+            prop.setProperty("boostVersion", version)
+
+            // save properties to project root folder
+            prop.store(output, null)
+
+        } catch (IOException io) {
+            io.printStackTrace()
+        } finally {
+            if (output != null) {
+                try {
+                    output.close()
+                } catch (IOException e) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 }
 
