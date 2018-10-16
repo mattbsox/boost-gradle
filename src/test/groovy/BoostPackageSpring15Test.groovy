@@ -27,7 +27,7 @@ public class PackageSpring15Test extends AbstractBoostTest {
 
     static File resourceDir = new File("build/resources/test/springApp")
     static File testProjectDir = new File(integTestDir, "PackageSpring15Test")
-    static File buildFilename = new File(resourceDir, "springApp-15.gradle")
+    static String buildFilename = "springApp-15.gradle"
 
     private static final String SPRING_BOOT_15_FEATURE = "<feature>springBoot-1.5</feature>"
     private static String SERVER_XML = "build/wlp/usr/servers/BoostServer/server.xml"
@@ -35,7 +35,7 @@ public class PackageSpring15Test extends AbstractBoostTest {
     @Before
     public void setup() {
         createDir(testProjectDir)
-        copyBuildFiles(buildFilename, testProjectDir)
+        createTestProject(testProjectDir, resourceDir, buildFilename)
     }
 
     @Test

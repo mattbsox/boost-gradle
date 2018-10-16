@@ -37,6 +37,7 @@ public class BoostDockerTask extends AbstractBoostTask {
     protected static final String RUN = "RUN "
 
     String springBootVersion
+    String appName
     File appFile
 
     BoostDockerTask() {
@@ -66,22 +67,29 @@ public class BoostDockerTask extends AbstractBoostTask {
                                     appFile.getName().substring(appFile.getName().lastIndexOf("."))
                                 appFile = new File(appFile.getParent(), appArchiveName)
                             }
+                        } else {
+                            throw new GradleException ('Unable to determine the project artifact name from jar task. Please use the java plugin.')
                         }
-                    } //JEE case here
+                    } 
+                    appName = appFile.getName().substring(0, appFile.getName().lastIndexOf("."))
                     configureDockerPlugin()  
-                }
+                }//JEE case here
+
                 project.dockerClean.enabled = false
                 project.dockerPrepare.enabled = false
             }
             
             doFirst {
-                if (appFile == null) { //if we didn't set the appName during configuration we can get it from the project
+                if (appFile == null) { //if we didn't set the appName during configuration we can get it from the project, will be set for springboot projects
                     if (!project.configurations.archives.allArtifacts.isEmpty()) {
                         appFile = project.configurations.archives.allArtifacts[0].getFile()
-                        project.docker.setName(appFile.getName())
+                        appName = appFile.getName().substring(0, appFile.getName().lastIndexOf("."))
+                        project.docker.setName(appName)
                     } else {
                         throw new GradleException ('Unable to determine the project artifact name.')
                     }
+                    //need to configure the docker plugin
+                    configureDockerPlugin()
                 }
                 createDockerFile()
             }
@@ -101,9 +109,9 @@ public class BoostDockerTask extends AbstractBoostTask {
     //Could get the archiveName from the configurations.archives
     protected void configureDockerPlugin() {
         if (project.boost.dockerRepo != null && !project.boost.dockerRepo.isEmpty()) {
-            project.docker.setName(project.boost.dockerRepo + '/' + appFile.getName())
+            project.docker.setName(project.boost.dockerRepo + '/' + appName)
         } else {
-            project.docker.setName(appFile.getName())
+            project.docker.setName(appName)
         }
 
         project.docker.setDockerfile(new File(project.projectDir, 'Dockerfile'))
