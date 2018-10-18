@@ -23,7 +23,19 @@ import static org.gradle.testkit.runner.TaskOutcome.*
 
 public class BoostFunctionalTest extends AbstractBoostTest {
 
-    String buildFileContent = "buildscript {\n\trepositories {\n\t\tmavenLocal()\n\t\tmavenCentral()\n\t}\n\tdependencies {\n\t\tclasspath \"io.openliberty.boost:boost-gradle-plugin:\$boostVersion\"\n\t}\n}\n\napply plugin: 'boost'"
+    String buildFileContent =   "buildscript {\n\t" + 
+                                    "repositories {\n\t\t" + 
+                                        "mavenLocal()\n\t\t" +
+                                        "mavenCentral()\n\t\t" +
+                                        "maven {\n\t\t\t" +
+                                            "url 'https://oss.sonatype.org/content/repositories/snapshots/'\n\t\t" +
+                                        "}\n\t" +
+                                    "}\n\t" +
+                                    "dependencies {\n\t\t" +
+                                        "classpath \"io.openliberty.boost:boost-gradle-plugin:\$boostVersion\"\n\t" +
+                                    "}\n" +
+                                "}\n\n" +
+                                "apply plugin: 'boost'"
 
     @Before
     void setup () {
