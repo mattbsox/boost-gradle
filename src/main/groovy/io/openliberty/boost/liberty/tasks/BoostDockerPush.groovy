@@ -32,10 +32,12 @@ public class BoostDockerPushTask extends AbstractBoostTask {
             logging.level = LogLevel.INFO
             group 'Boost'
 
-            dependsOn 'boostDocker'
+            dependsOn 'build'
 
             project.afterEvaluate {
-                finalizedBy 'dockerPush'
+                if (isDockerConfigured()) {
+                    finalizedBy 'dockerPush'
+                }
             }
         })
     }

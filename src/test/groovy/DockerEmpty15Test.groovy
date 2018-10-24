@@ -33,14 +33,15 @@ import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.core.DockerClientBuilder
 
-public class DockerBuild20Test extends AbstractBoostTest {
+//Tests an empty BoostDockerExtension
+public class DockerEmpty15Test extends AbstractBoostTest {
     private static File dockerFile
     private static DockerClient dockerClient
     private static BuildResult result
         
     static File resourceDir = new File("build/resources/test/springApp")
-    static File testProjectDir = new File(integTestDir, "DockerBuild20Test")
-    static String buildFilename = "docker20Test.gradle"
+    static File testProjectDir = new File(integTestDir, "DockerEmpty15Test")
+    static String buildFilename = "dockerEmpty15Test.gradle"
 
     @BeforeClass
     public static void setup() {
@@ -51,7 +52,7 @@ public class DockerBuild20Test extends AbstractBoostTest {
 
         result = GradleRunner.create()
             .withProjectDir(testProjectDir)
-            .withArguments("build")
+            .withArguments("boostDocker")
             .build()
 
         assertEquals(SUCCESS, result.task(":boostDocker").getOutcome())
@@ -71,13 +72,13 @@ public class DockerBuild20Test extends AbstractBoostTest {
     public void testDockerfileContainsCorrectLibertyImage() throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(dockerFile))
 
-        assertTrue("Expected Open liberty base image open-liberty:springBoot2 was not found in " + dockerFile.getCanonicalPath(), reader.readLine().contains("open-liberty:springBoot2"))
+        assertTrue("Expected Open liberty base image open-liberty:springBoot2 was not found in " + dockerFile.getCanonicalPath(), reader.readLine().contains("open-liberty:springBoot1"))
 
     }
     
     @Test
     public void runDockerContainerAndVerifyAppOnEndpoint() throws Exception {
-        CreateContainerResponse container = dockerClient.createContainerCmd("localhost:5000/test-image20:latest")
+        CreateContainerResponse container = dockerClient.createContainerCmd("localhost:5000/test-docker15:latest")
                 .withPortBindings(PortBinding.parse("9080:9080")).exec()
         Thread.sleep(3000)
 

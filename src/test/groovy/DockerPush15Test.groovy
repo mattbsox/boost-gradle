@@ -12,6 +12,8 @@
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
+import static org.gradle.testkit.runner.TaskOutcome.*
+
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNull
@@ -32,7 +34,7 @@ import com.github.dockerjava.core.command.PullImageResultCallback
 public class DockerPush15Test extends AbstractBoostTest {
 
     private static DockerClient dockerClient
-    private static String imageName = "localhost:5000/test-docker15:latest"
+    private static String imageName = "localhost:5000/test-image15:latest"
     private static BuildResult result
         
     static File resourceDir = new File("build/resources/test/springApp")
@@ -49,6 +51,9 @@ public class DockerPush15Test extends AbstractBoostTest {
             .withProjectDir(testProjectDir)
             .withArguments("boostDockerPush")
             .build()
+
+        assertEquals(SUCCESS, result.task(":boostDocker").getOutcome())
+        assertEquals(SUCCESS, result.task(":boostDockerPush").getOutcome())
     }
 
     @Test
@@ -64,7 +69,7 @@ public class DockerPush15Test extends AbstractBoostTest {
 
         // Pull the image from the local repository which got pushed by the plugin. This
         // is possible if the plugin successfully pushed to the registry.
-        dockerClient.pullImageCmd("localhost:5000/test-docker15").withTag("latest").exec(new PullImageResultCallback())
+        dockerClient.pullImageCmd("localhost:5000/test-image15").withTag("latest").exec(new PullImageResultCallback())
                 .awaitCompletion(10, TimeUnit.SECONDS)
 
         Image pulledImage = getImage(imageName)

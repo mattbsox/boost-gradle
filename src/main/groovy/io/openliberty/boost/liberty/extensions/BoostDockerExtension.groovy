@@ -11,15 +11,9 @@
 
 package io.openliberty.boost.liberty.extensions
 
-import org.gradle.util.ConfigureUtil
+class BoostDockerExtension {
 
-class BoostExtension {
-
-	BoostDockerExtension docker
-
-	def docker(Closure closure){
-        docker = new BoostDockerExtension()
-        ConfigureUtil.configure(closure, docker)
-	}
+	String imageName = null
+	String dockerRepo = null
 
 }

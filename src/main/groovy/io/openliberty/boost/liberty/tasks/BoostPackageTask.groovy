@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
+
 package io.openliberty.boost.liberty.tasks
 
 import java.util.ArrayList
@@ -47,17 +48,25 @@ public class BoostPackageTask extends AbstractBoostTask {
 
             dependsOn 'libertyCreate'
 
+            mustRunAfter 'boostDocker'
+
             //There are some things that this task does before we can package up the server into a JAR
             PackageAndDumpExtension boostPackage = new PackageAndDumpExtension()
 
             //We have to check these properties after the build.gradle file has been evaluated.
             //Some properties could get set after our plugin is applied.
             project.afterEvaluate {
+                //Configuring spring plugin task dependencies
                 if (isSpringProject()) {
-                    if(springBootVersion.startsWith('2.0')) {
+                    if(springBootVersion.startsWith('2.')) {
                         boostPackage.archive = project.bootJar.archivePath.toString()
-                        dependsOn 'installApps'
-                    } else { //Assume 1.5?
+                        dependsOn 'bootJar'
+
+                        //Skipping if Docker is configured
+                        if (!isDockerConfigured()) {
+                            project.bootJar.finalizedBy 'boostPackage'
+                        }
+                    } else if(springBootVersion.startsWith('1.')) { //Assume 1.5?
                         //No bootJar task so we have to get the archive name from the jar or war tasks
                         if (project.plugins.hasPlugin('java')) {
                             //Going to use the jar task archiveName for the boostRepackage name
@@ -72,30 +81,22 @@ public class BoostPackageTask extends AbstractBoostTask {
                         //Handle classifier
                         if (project.bootRepackage.classifier != null && !project.bootRepackage.classifier.isEmpty()) {
                             boostPackage.archive = //Adding classifier to the boost archiveName
-                                boostPackage.archive.substring(0, boostPackage.archive.lastIndexOf(".")) + '-' + project.bootRepackage.classifier.toString() + boostPackage.archive.substring(boostPackage.archive.lastIndexOf("."))
+                                boostPackage.archive.substring(0, boostPackage.archive.lastIndexOf(".")) +
+                                '-' + project.bootRepackage.classifier.toString() +
+                                boostPackage.archive.substring(boostPackage.archive.lastIndexOf("."))
                         }
-
                         dependsOn 'bootRepackage'
-                    }
 
-                    //installFeature should check the server.xml in the server directory and install the missing features
-                    project.tasks.getByName('libertyPackage').dependsOn 'installFeature'
-                } else { //JavaEE projects
-
-                    //Need to check features and generate server.xml
-
-                    dependsOn 'installApps'
-
-                    //WAR and EAR projects will be packaged as zips even with include set to 'minify, runnable'
-                    if(project.plugins.hasPlugin('war')) {
-                        boostPackage.archive = project.war.archivePath.toString()
-                    } else if (project.plugins.hasPlugin('ear')) {
-                        boostPackage.archive = project.ear.archivePath.toString()
-                    } else {
-                        boostPackage.archive = 'BoostApp.jar'
+                        //Skipping if Docker is configured
+                        if (!isDockerConfigured()) {
+                            project.bootRepackage.finalizedBy 'boostPackage'
+                        }
                     }
                 }
-                project.tasks.getByName('libertyPackage').dependsOn 'installApps'
+                //Configuring liberty plugin task dependencies and parameters
+                //installFeature should check the server.xml in the server directory and install the missing features
+
+                project.tasks.getByName('libertyPackage').dependsOn 'installApps', 'installFeature'
                 finalizedBy 'libertyPackage'
                 boostPackage.include = "runnable, minify"
             }
@@ -106,11 +107,20 @@ public class BoostPackageTask extends AbstractBoostTask {
                 project.liberty.server.packageLiberty = boostPackage
 
                 if (isSpringProject()) {
-                    if(springBootVersion.startsWith('2.0')) {
-                        File springUberJar = project.bootJar.archivePath
-                        validateSpringBootUberJAR(springUberJar)
-                        copySpringBootUberJar(springUberJar)
+                    File springUberJar
+                    if(springBootVersion.startsWith('2.')) {
+                        springUberJar = project.bootJar.archivePath
+                    } else if(springBootVersion.startsWith('1.')) {
+                        if (project.plugins.hasPlugin('java')) {
+                            springUberJar = project.jar.archivePath
+                        } else if (project.plugins.hasPlugin('war')) {
+                            springUberJar = project.war.archivePath
+                        }
                     }
+                    validateSpringBootUberJAR(springUberJar)
+                    copySpringBootUberJar(springUberJar)
+                } else { //JavaEE projects?
+                    throw new GradleException('Could not package the project with boostPackage. The boostPackage task must be used with a SpringBoot project.')
                 }
 
                 createServerXml()
@@ -142,8 +152,10 @@ public class BoostPackageTask extends AbstractBoostTask {
         String classifier = null
 
         if (isSpringProject()) {
-            if (springBootVersion.startsWith('2.0')) {
-                classifierproject.tasks.getByName('bootJar').classifier
+            if (springBootVersion.startsWith('2.')) {
+                classifier = project.tasks.getByName('bootJar').classifier
+            } else if (springBootVersion.startsWith('1.')) {
+                classifier = project.tasks.getByName('bootRepackage').classifier
             }
         }
 

@@ -51,8 +51,10 @@ public class DockerBuild15Test extends AbstractBoostTest {
 
         result = GradleRunner.create()
             .withProjectDir(testProjectDir)
-            .withArguments("boostDocker")
+            .withArguments("build")
             .build()
+
+        assertEquals(SUCCESS, result.task(":boostDocker").getOutcome())
     }
 
     @Test
@@ -74,7 +76,7 @@ public class DockerBuild15Test extends AbstractBoostTest {
     
     @Test
     public void runDockerContainerAndVerifyAppOnEndpoint() throws Exception {
-        CreateContainerResponse container = dockerClient.createContainerCmd("localhost:5000/test-docker20:latest")
+        CreateContainerResponse container = dockerClient.createContainerCmd("localhost:5000/test-image15:latest")
                 .withPortBindings(PortBinding.parse("9080:9080")).exec()
         Thread.sleep(3000)
 

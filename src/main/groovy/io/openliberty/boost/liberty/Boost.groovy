@@ -13,6 +13,8 @@ package io.openliberty.boost.liberty
 import org.gradle.api.*
 import net.wasdev.wlp.gradle.plugins.extensions.ServerExtension
 
+import io.openliberty.boost.liberty.extensions.BoostExtension
+
 public class Boost implements Plugin<Project> {
 
     final String BOOST_SERVER_NAME = 'BoostServer'
@@ -28,6 +30,7 @@ public class Boost implements Plugin<Project> {
         project.liberty.server = configureBoostServerProperties()
     }
 
+    //Overwritten by any liberty configuration in build file
     ServerExtension configureBoostServerProperties() {
         ServerExtension boostServer = new ServerExtension()
         boostServer.name = BOOST_SERVER_NAME

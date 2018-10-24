@@ -15,4 +15,7 @@ import org.gradle.api.Project
 
 abstract class AbstractBoostTask extends DefaultTask {
 
+	protected boolean isDockerConfigured() {
+		return project.boost.docker != null
+	}
 }

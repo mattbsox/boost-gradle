@@ -51,12 +51,14 @@ public class BoostDockerTask extends AbstractBoostTask {
             project.afterEvaluate {
                 springBootVersion = GradleProjectUtil.findSpringBootVersion(project)
                 if (springBootVersion != null) {
-                    if (springBootVersion.startsWith("2.")) {
-                        dependsOn 'bootJar'
-                        appFile = project.bootJar.archivePath
-                    } else if (springBootVersion.startsWith("1.")){
-                        dependsOn 'bootRepackage'
-                        if (project.plugins.hasPlugin('java')) {
+                    if (project.plugins.hasPlugin('java')) {
+                        if (springBootVersion.startsWith("2.")) {
+                            dependsOn 'bootJar'
+                            appFile = project.bootJar.archivePath
+                            if (isDockerConfigured()) { //We won't add the project to the build lifecycle if Docker isn't configured
+                                project.bootJar.finalizedBy 'boostDocker'
+                            }
+                        } else if (springBootVersion.startsWith("1.")){
                             appFile = project.jar.archivePath
                             //Checking for classifier in bootRepackage and adding to archiveName
                             if (project.bootRepackage.classifier != null && !project.bootRepackage.classifier.isEmpty()) {
@@ -67,14 +69,30 @@ public class BoostDockerTask extends AbstractBoostTask {
                                     appFile.getName().substring(appFile.getName().lastIndexOf("."))
                                 appFile = new File(appFile.getParent(), appArchiveName)
                             }
-                        } else {
-                            throw new GradleException ('Unable to determine the project artifact name from jar task. Please use the java plugin.')
-                        }
-                    } 
-                    appName = appFile.getName().substring(0, appFile.getName().lastIndexOf("."))
-                    configureDockerPlugin()  
+                            
+                            dependsOn 'bootRepackage'
+
+                            if (isDockerConfigured()) {
+                                project.bootRepackage.finalizedBy 'boostDocker'
+                            }
+                        } 
+                    } else {
+                        throw new GradleException ('Unable to determine the project artifact name to add to the container. Please use the java plugin.')
+                    }
+
+                    //Getting image name from boost docker extension if it is set, otherwise we use the file name w/o extension
+                    if (isDockerConfigured() && project.boost.docker.imageName != null && !project.boost.docker.imageName.isEmpty()) {
+                        logger.info ("Setting image name to: ${project.boost.docker.imageName}")
+                        appName = project.boost.docker.imageName
+                    } else {
+                        appName = appFile.getName().substring(0, appFile.getName().lastIndexOf("."))
+                        logger.info ("Setting image name to: ${appName}")
+                    }
+                    
+                    configureDockerPlugin()
                 }//JEE case here
 
+                //Need to disable these so they don't clean our Dockerfile if we run the Docker tasks
                 project.dockerClean.enabled = false
                 project.dockerPrepare.enabled = false
             }
@@ -108,8 +126,8 @@ public class BoostDockerTask extends AbstractBoostTask {
 
     //Could get the archiveName from the configurations.archives
     protected void configureDockerPlugin() {
-        if (project.boost.dockerRepo != null && !project.boost.dockerRepo.isEmpty()) {
-            project.docker.setName(project.boost.dockerRepo + '/' + appName)
+        if (isDockerConfigured() && project.boost.docker.dockerRepo != null && !project.boost.docker.dockerRepo.isEmpty()) {
+            project.docker.setName(project.boost.docker.dockerRepo + '/' + appName)
         } else {
             project.docker.setName(appName)
         }

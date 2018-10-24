@@ -28,7 +28,10 @@ bootRepackage {
 }
 
 boost {
-    dockerRepo = 'localhost:5000'
+    docker {
+        imageName = 'test-image15'
+        dockerRepo = 'localhost:5000'
+    }
 }
 
 repositories {

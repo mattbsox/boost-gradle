@@ -33,14 +33,15 @@ import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.core.DockerClientBuilder
 
-public class DockerBuild20Test extends AbstractBoostTest {
+//Tests an empty BoostDockerExtension
+public class DockerEmpty20Test extends AbstractBoostTest {
     private static File dockerFile
     private static DockerClient dockerClient
     private static BuildResult result
         
     static File resourceDir = new File("build/resources/test/springApp")
-    static File testProjectDir = new File(integTestDir, "DockerBuild20Test")
-    static String buildFilename = "docker20Test.gradle"
+    static File testProjectDir = new File(integTestDir, "DockerEmpty20Test")
+    static String buildFilename = "dockerEmpty20Test.gradle"
 
     @BeforeClass
     public static void setup() {
@@ -77,7 +78,7 @@ public class DockerBuild20Test extends AbstractBoostTest {
     
     @Test
     public void runDockerContainerAndVerifyAppOnEndpoint() throws Exception {
-        CreateContainerResponse container = dockerClient.createContainerCmd("localhost:5000/test-image20:latest")
+        CreateContainerResponse container = dockerClient.createContainerCmd("localhost:5000/test-docker20:latest")
                 .withPortBindings(PortBinding.parse("9080:9080")).exec()
         Thread.sleep(3000)
 
